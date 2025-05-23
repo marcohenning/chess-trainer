@@ -1,3 +1,4 @@
+import math
 import chess
 from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtWidgets import QWidget
@@ -15,9 +16,14 @@ class Board(QWidget):
         self.square_size = self.board.width() // 8
         self.board_rectangle = self.board.rect()
 
+        self.setMouseTracking(True)
+        self.board.setMouseTracking(True)
+
         self.files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
         self.pieces: list[Piece] = []
         self.turn = 'White'
+
+        self.selected_square = None
 
         self.letter_to_piece_type = {
             "K": PieceType.KING_WHITE,
@@ -56,6 +62,75 @@ class Board(QWidget):
         fen = 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3'
         self.board_backend = chess.Board(fen)
         self.update_board(fen)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            square = self.coordinate_to_square(event.pos())
+            if not square: return
+
+            if self.selected_square:
+                if self.selected_square == square:
+                    self.selected_square = None
+                elif self.square_occupied(square):
+                    move_uci = self.selected_square + square
+                    success = self.execute_move(move_uci)
+                    if not success:
+                        self.selected_square = square
+                else:
+                    move_uci = self.selected_square + square
+                    success = self.execute_move(move_uci)
+                    if not success:
+                        self.selected_square = None
+            else:
+                if self.square_occupied(square):
+                    self.selected_square = square
+
+        elif event.button() == Qt.MouseButton.RightButton:
+            if self.selected_square:
+                self.selected_square = None
+
+    def mouseMoveEvent(self, event):
+        square = self.coordinate_to_square(event.pos())
+        if not square:
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+            return
+        if self.square_occupied(square):
+            self.setCursor(Qt.CursorShape.PointingHandCursor)
+        else:
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+
+    def coordinate_to_square(self, coordinate: QPoint):
+        file = math.ceil(coordinate.x() / self.square_size)
+        rank = math.ceil((self.board.height() - coordinate.y()) / self.square_size)
+
+        if file < 1 or file > 8 or rank < 1 or rank > 8:
+            return None
+        
+        if self.turn == 'White':
+            file = self.files[file - 1]
+            return file + str(rank)
+        else:
+            file = self.files[9 - file - 1]
+            rank = 9 - rank
+            return file + str(rank)
+
+    def square_occupied(self, square: str):
+        square = chess.parse_square(square)
+        piece = self.board_backend.piece_at(square)
+        if piece:
+            return True
+        else:
+            return False
+
+    def execute_move(self, move_uci: str):
+        move = chess.Move.from_uci(move_uci)
+        if self.board_backend.is_legal(move):
+            self.board_backend.push(move)
+            self.update_board(self.board_backend.fen())
+            self.selected_square = None
+            return True
+        else:
+            return False
 
     def update_board(self, fen: str):
         fen_shortened = fen.split(' ')[0]

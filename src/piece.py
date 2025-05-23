@@ -43,4 +43,5 @@ class Piece(QLabel):
         image = QPixmap(image_path)
         self.setPixmap(image)
         self.setFixedSize(image.size())
+        self.setMouseTracking(True)
         self.setVisible(False)
