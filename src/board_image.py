@@ -26,3 +26,37 @@ class BoardImage(QLabel):
 
         self.setPixmap(image_rounded)
         self.setFixedSize(image.size())
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(0, 0, 255, 140)) # temporary blue, exact blue will be added later
+
+        arrow = QPolygon([
+            QPoint(399, 400),
+            QPoint(398, 399),
+            QPoint(397, 399),
+            QPoint(396, 398),
+            QPoint(395, 397),
+            QPoint(395, 396),
+            QPoint(394, 395),
+            QPoint(394, 200),
+            QPoint(394 - 21, 200),
+            QPoint(400, 200 - 28),
+            QPoint(401, 200 - 28),
+            QPoint(407 + 21, 200),
+            QPoint(407, 200),
+            QPoint(407, 395),
+            QPoint(406, 396),
+            QPoint(406, 397),
+            QPoint(405, 398),
+            QPoint(404, 399),
+            QPoint(403, 399),
+            QPoint(402, 400),
+        ])
+
+        painter.drawPolygon(arrow)
+        painter.end()
