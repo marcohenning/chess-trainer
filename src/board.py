@@ -3,7 +3,8 @@ import math
 import chess
 import pygame
 from PyQt6.QtCore import Qt, QPoint
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtGui import QCursor
+from PyQt6.QtWidgets import QWidget, QPushButton
 from piece import Piece
 from board_image import BoardImage
 from piece_type import PieceType
@@ -18,6 +19,22 @@ class Board(QWidget):
         self.square_size = self.board.width() // 8
         self.board_rectangle = self.board.rect()
 
+        self.button_queen = QPushButton('Queen', self)
+        self.button_queen.setVisible(False)
+        self.button_queen.pressed.connect(self.handle_button_queen)
+
+        self.button_rook = QPushButton('Rook', self)
+        self.button_rook.setVisible(False)
+        self.button_rook.pressed.connect(self.handle_button_rook)
+
+        self.button_bishop = QPushButton('Bishop', self)
+        self.button_bishop.setVisible(False)
+        self.button_bishop.pressed.connect(self.handle_button_bishop)
+
+        self.button_knight = QPushButton('Knight', self)
+        self.button_knight.setVisible(False)
+        self.button_knight.pressed.connect(self.handle_button_knight)
+
         self.setMouseTracking(True)
         self.board.setMouseTracking(True)
 
@@ -28,6 +45,7 @@ class Board(QWidget):
         self.files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
         self.pieces: list[Piece] = []
         self.turn = 'White'
+        self.move_uci = None
 
         self.selected_square = None
 
@@ -71,6 +89,13 @@ class Board(QWidget):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
+
+            if self.button_queen.isVisible():
+                self.selected_square = None
+                self.move_uci = None
+                self.hide_promotion_prompt()
+                return
+
             square = self.coordinate_to_square(event.pos())
             if not square: return
 
@@ -79,11 +104,19 @@ class Board(QWidget):
                     self.selected_square = None
                 elif self.square_occupied(square):
                     move_uci = self.selected_square + square
+                    
+                    can_promote = self.can_promote(move_uci)
+                    if can_promote: return
+
                     success = self.execute_move(move_uci)
                     if not success:
                         self.selected_square = square
                 else:
                     move_uci = self.selected_square + square
+
+                    can_promote = self.can_promote(move_uci)
+                    if can_promote: return
+
                     success = self.execute_move(move_uci)
                     if not success:
                         self.selected_square = None
@@ -155,9 +188,57 @@ class Board(QWidget):
             pygame.mixer.music.play()
 
             self.selected_square = None
+            self.move_uci = None
             return True
         else:
             return False
+
+    def can_promote(self, move_uci: str):
+        move = chess.Move.from_uci(move_uci + 'q')
+        if self.board_backend.is_legal(move):
+            self.move_uci = move_uci
+            self.show_promotion_prompt()
+            return True
+        else:
+            return False
+        
+    def show_promotion_prompt(self):
+        self.button_queen.setVisible(True)
+        self.button_rook.setVisible(True)
+        self.button_bishop.setVisible(True)
+        self.button_knight.setVisible(True)
+
+        global_cursor_position = QCursor.pos()
+        local_cursor_position = self.mapFromGlobal(global_cursor_position)
+        self.button_queen.move(local_cursor_position)
+        self.button_rook.move(self.button_queen.pos().x(), self.button_queen.pos().y() + self.button_queen.height())
+        self.button_bishop.move(self.button_rook.pos().x(), self.button_rook.pos().y() + self.button_rook.height())
+        self.button_knight.move(self.button_bishop.pos().x(), self.button_bishop.pos().y() + self.button_bishop.height())
+
+        # TODO: clamp the button's positions so they don't leave the widget (right and bottom side)
+
+    def hide_promotion_prompt(self):
+        self.button_queen.setVisible(False)
+        self.button_rook.setVisible(False)
+        self.button_bishop.setVisible(False)
+        self.button_knight.setVisible(False)
+
+    def execute_promotion(self, piece: str):
+        self.hide_promotion_prompt()
+        if self.move_uci:
+            self.execute_move(self.move_uci + piece)
+
+    def handle_button_queen(self):
+        self.execute_promotion('q')
+
+    def handle_button_rook(self):
+        self.execute_promotion('r')
+
+    def handle_button_bishop(self):
+        self.execute_promotion('b')
+
+    def handle_button_knight(self):
+        self.execute_promotion('n')
 
     def square_center(self, square: str):
         file = square[0]
