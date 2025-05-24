@@ -1,4 +1,5 @@
 import os
+import math
 from PyQt6.QtCore import Qt, QPoint, QRectF
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtGui import QPixmap, QColor, QPainter, QPolygon, QPainterPath
@@ -26,6 +27,8 @@ class BoardImage(QLabel):
 
         self.setPixmap(image_rounded)
         self.setFixedSize(image.size())
+
+        self.arrow: list[QPoint] = []
 
     def paintEvent(self, event):
         super().paintEvent(event)
@@ -59,4 +62,46 @@ class BoardImage(QLabel):
         ])
 
         painter.drawPolygon(arrow)
+
+        if self.arrow:
+            painter.drawPolygon(self.arrow)
+        
         painter.end()
+
+    def draw_arrow(self, origin: QPoint, destination: QPoint):
+        arrow_length = self.move_distance(origin, destination)
+
+        arrow_tip_length = 28
+        arrow_tip_added_width = 21
+        arrow_bottom_length = 6
+        arrow_body_length = arrow_length - arrow_tip_length - arrow_bottom_length + 1
+
+        origin.setY(origin.y() + 1)
+
+        self.arrow.clear()
+
+        self.arrow.append(QPoint(origin.x() - 1, origin.y()))
+        self.arrow.append(QPoint(self.arrow[-1].x() - 1, self.arrow[-1].y() - 1))
+        self.arrow.append(QPoint(self.arrow[-1].x() - 1, self.arrow[-1].y()))
+        self.arrow.append(QPoint(self.arrow[-1].x() - 1, self.arrow[-1].y() - 1))
+        self.arrow.append(QPoint(self.arrow[-1].x() - 1, self.arrow[-1].y() - 1))
+        self.arrow.append(QPoint(self.arrow[-1].x(), self.arrow[-1].y() - 1))
+        self.arrow.append(QPoint(self.arrow[-1].x() - 1, self.arrow[-1].y() - 1))
+        self.arrow.append(QPoint(self.arrow[-1].x(), self.arrow[-1].y() - arrow_body_length))
+        self.arrow.append(QPoint(self.arrow[-1].x() - arrow_tip_added_width, self.arrow[-1].y()))
+        self.arrow.append(QPoint(origin.x(), self.arrow[-1].y() - arrow_tip_length))
+        self.arrow.append(QPoint(self.arrow[-1].x() + 1, self.arrow[-1].y()))
+        self.arrow.append(QPoint(self.arrow[-1].x() + 6 + arrow_tip_added_width, self.arrow[-1].y() + arrow_tip_length))
+        self.arrow.append(QPoint(self.arrow[-1].x() - arrow_tip_added_width, self.arrow[-1].y()))
+        self.arrow.append(QPoint(self.arrow[-1].x(), self.arrow[-1].y() + arrow_body_length))
+        self.arrow.append(QPoint(self.arrow[-1].x() - 1, self.arrow[-1].y() + 1))
+        self.arrow.append(QPoint(self.arrow[-1].x(), self.arrow[-1].y() + 1))
+        self.arrow.append(QPoint(self.arrow[-1].x() - 1, self.arrow[-1].y() + 1))
+        self.arrow.append(QPoint(self.arrow[-1].x() - 1, self.arrow[-1].y() + 1))
+        self.arrow.append(QPoint(self.arrow[-1].x() - 1, self.arrow[-1].y()))
+        self.arrow.append(QPoint(self.arrow[-1].x() - 1, self.arrow[-1].y() + 1))
+
+        self.update()
+
+    def move_distance(self, origin: QPoint, destination: QPoint):
+        return int(math.hypot(destination.x() - origin.x(), destination.y() - origin.y()))

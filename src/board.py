@@ -63,6 +63,12 @@ class Board(QWidget):
         self.board_backend = chess.Board(fen)
         self.update_board(fen)
 
+        # Test drawing arrow
+        test_move_origin = self.square_center("g3")
+        test_move_destination = self.square_center("g5")
+        self.board.draw_arrow(test_move_origin, test_move_destination)
+
+
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             square = self.coordinate_to_square(event.pos())
@@ -131,6 +137,19 @@ class Board(QWidget):
             return True
         else:
             return False
+
+    def square_center(self, square: str):
+        file = square[0]
+        rank = int(square[1])
+        file_index = self.files.index(file)
+        rank_index = 7 - (rank - 1)
+
+        if self.turn == 'Black':
+            file_index = 7 - file_index
+            rank_index = rank - 1
+
+        center = QPoint(int((file_index + 0.5) * self.square_size - 1), int((rank_index + 0.5) * self.square_size - 1))
+        return center
 
     def update_board(self, fen: str):
         fen_shortened = fen.split(' ')[0]
