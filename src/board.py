@@ -1,5 +1,7 @@
+import os
 import math
 import chess
+import pygame
 from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtWidgets import QWidget
 from piece import Piece
@@ -18,6 +20,10 @@ class Board(QWidget):
 
         self.setMouseTracking(True)
         self.board.setMouseTracking(True)
+
+        self.directory = os.path.dirname(os.path.abspath(__file__))
+
+        pygame.mixer.init()
 
         self.files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
         self.pieces: list[Piece] = []
@@ -124,6 +130,8 @@ class Board(QWidget):
 
     def execute_move(self, move_uci: str):
         move = chess.Move.from_uci(move_uci)
+        move_algebraic = self.board_backend.san(move)
+
         if self.board_backend.is_legal(move):
             self.board_backend.push(move)
             self.update_board(self.board_backend.fen())
@@ -132,6 +140,19 @@ class Board(QWidget):
             origin = self.square_center(move_uci[:2])
             destination = self.square_center(move_uci[2:])
             self.board.draw_arrow(origin, destination)
+
+            sound = 'place.wav'
+            if '+' in move_algebraic or '#' in move_algebraic:
+                sound = 'check.wav'
+            elif 'x' in move_algebraic:
+                sound = 'capture.wav'
+            elif '-' in move_algebraic:
+                sound = 'castling.wav'
+
+            pygame.mixer.music.stop()
+            sound_path = os.path.join(self.directory, 'sounds', sound)
+            pygame.mixer.music.load(sound_path)
+            pygame.mixer.music.play()
 
             self.selected_square = None
             return True
