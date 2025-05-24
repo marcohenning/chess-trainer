@@ -59,15 +59,9 @@ class Board(QWidget):
             self.pieces.append(Piece(PieceType.PAWN_WHITE, self.board))
             self.pieces.append(Piece(PieceType.PAWN_BLACK, self.board))
 
-        fen = 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3'
+        fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
         self.board_backend = chess.Board(fen)
         self.update_board(fen)
-
-        # Test drawing arrow
-        test_move_origin = self.square_center("e2")
-        test_move_destination = self.square_center("d4")
-        self.board.draw_arrow(test_move_origin, test_move_destination)
-
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -133,6 +127,12 @@ class Board(QWidget):
         if self.board_backend.is_legal(move):
             self.board_backend.push(move)
             self.update_board(self.board_backend.fen())
+
+            # Draw arrow
+            origin = self.square_center(move_uci[:2])
+            destination = self.square_center(move_uci[2:])
+            self.board.draw_arrow(origin, destination)
+
             self.selected_square = None
             return True
         else:

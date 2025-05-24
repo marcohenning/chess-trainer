@@ -2,7 +2,7 @@ import os
 import math
 from PyQt6.QtCore import Qt, QPoint, QRectF
 from PyQt6.QtWidgets import QLabel
-from PyQt6.QtGui import QPixmap, QColor, QPainter, QPolygon, QPainterPath
+from PyQt6.QtGui import QPixmap, QColor, QPainter, QPainterPath
 
 
 class BoardImage(QLabel):
@@ -38,7 +38,7 @@ class BoardImage(QLabel):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QColor(0, 0, 255, 140)) # temporary blue, exact blue will be added later
+        painter.setBrush(QColor(0, 0, 255, 142))
 
         if self.arrow:
             painter.translate(self.origin)
@@ -46,7 +46,7 @@ class BoardImage(QLabel):
             painter.translate(- self.origin)
 
             painter.drawPolygon(self.arrow)
-            
+
             painter.translate(self.origin)
             painter.rotate(- self.rotation)
             painter.translate(- self.origin)
@@ -89,6 +89,10 @@ class BoardImage(QLabel):
         origin.setY(origin.y() - 1)
         self.origin = origin
         self.rotation = self.calculate_rotation(origin, destination)
+
+        if self.rotation > 90 or self.rotation < -90:
+            origin.setX(origin.x() + 1)
+            origin.setY(origin.y() + 1)
 
         self.update()
 
