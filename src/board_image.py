@@ -29,6 +29,8 @@ class BoardImage(QLabel):
         self.setFixedSize(image.size())
 
         self.arrow: list[QPoint] = []
+        self.origin = QPoint()
+        self.rotation = 0.0
 
     def paintEvent(self, event):
         super().paintEvent(event)
@@ -38,38 +40,21 @@ class BoardImage(QLabel):
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QColor(0, 0, 255, 140)) # temporary blue, exact blue will be added later
 
-        arrow = QPolygon([
-            QPoint(399, 400),
-            QPoint(398, 399),
-            QPoint(397, 399),
-            QPoint(396, 398),
-            QPoint(395, 397),
-            QPoint(395, 396),
-            QPoint(394, 395),
-            QPoint(394, 200),
-            QPoint(394 - 21, 200),
-            QPoint(400, 200 - 28),
-            QPoint(401, 200 - 28),
-            QPoint(407 + 21, 200),
-            QPoint(407, 200),
-            QPoint(407, 395),
-            QPoint(406, 396),
-            QPoint(406, 397),
-            QPoint(405, 398),
-            QPoint(404, 399),
-            QPoint(403, 399),
-            QPoint(402, 400),
-        ])
-
-        painter.drawPolygon(arrow)
-
         if self.arrow:
+            painter.translate(self.origin)
+            painter.rotate(self.rotation)
+            painter.translate(- self.origin)
+
             painter.drawPolygon(self.arrow)
+            
+            painter.translate(self.origin)
+            painter.rotate(- self.rotation)
+            painter.translate(- self.origin)
         
         painter.end()
 
     def draw_arrow(self, origin: QPoint, destination: QPoint):
-        arrow_length = self.move_distance(origin, destination)
+        arrow_length = self.calculate_move_distance(origin, destination)
 
         arrow_tip_length = 28
         arrow_tip_added_width = 21
@@ -101,7 +86,18 @@ class BoardImage(QLabel):
         self.arrow.append(QPoint(self.arrow[-1].x() - 1, self.arrow[-1].y()))
         self.arrow.append(QPoint(self.arrow[-1].x() - 1, self.arrow[-1].y() + 1))
 
+        origin.setY(origin.y() - 1)
+        self.origin = origin
+        self.rotation = self.calculate_rotation(origin, destination)
+
         self.update()
 
-    def move_distance(self, origin: QPoint, destination: QPoint):
+    def calculate_move_distance(self, origin: QPoint, destination: QPoint):
         return int(math.hypot(destination.x() - origin.x(), destination.y() - origin.y()))
+
+    def calculate_rotation(self, origin: QPoint, destination: QPoint):
+        dx = destination.x() - origin.x()
+        dy = destination.y() - origin.y()
+        angle_to_destination = math.atan2(dy, dx)
+        angle_up = -math.pi / 2
+        return math.degrees(angle_to_destination - angle_up)

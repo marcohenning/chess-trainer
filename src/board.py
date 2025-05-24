@@ -64,8 +64,8 @@ class Board(QWidget):
         self.update_board(fen)
 
         # Test drawing arrow
-        test_move_origin = self.square_center("g3")
-        test_move_destination = self.square_center("g5")
+        test_move_origin = self.square_center("e2")
+        test_move_destination = self.square_center("d4")
         self.board.draw_arrow(test_move_origin, test_move_destination)
 
 
