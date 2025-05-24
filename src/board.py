@@ -1,7 +1,9 @@
 import os
 import math
 import chess
-import pygame
+import contextlib
+with contextlib.redirect_stdout(None):
+    import pygame
 from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtGui import QCursor
 from PyQt6.QtWidgets import QWidget, QPushButton
@@ -18,6 +20,8 @@ class Board(QWidget):
         self.setFixedSize(self.board.size())
         self.square_size = self.board.width() // 8
         self.board_rectangle = self.board.rect()
+
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         self.button_queen = QPushButton('Queen', self)
         self.button_queen.setVisible(False)
@@ -295,3 +299,9 @@ class Board(QWidget):
                             else:
                                 piece_position.setX(piece_position.x() - self.square_size)
                             break
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Left:
+            print('Left')
+        elif event.key() == Qt.Key.Key_Right:
+            print('Right')
