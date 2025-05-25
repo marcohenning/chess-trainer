@@ -9,6 +9,7 @@ from PyQt6.QtGui import QCursor, QFont
 from PyQt6.QtWidgets import QWidget, QPushButton
 from piece import Piece
 from board_image import BoardImage
+from board_state import BoardState
 from piece_type import PieceType
 
 
@@ -58,10 +59,12 @@ class Board(QWidget):
 
         self.files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
         self.pieces: list[Piece] = []
+        self.board_states: list[Board] = []
+        self.board_state_index = 1
         self.turn = 'White'
         self.move_uci = None
-
         self.selected_square = None
+        self.input_disabled = False
 
         self.letter_to_piece_type = {
             "K": PieceType.KING_WHITE,
@@ -97,11 +100,15 @@ class Board(QWidget):
             self.pieces.append(Piece(PieceType.PAWN_WHITE, self.board))
             self.pieces.append(Piece(PieceType.PAWN_BLACK, self.board))
 
-        fen = '1nbqkbnr/P1pppppp/1r6/1p6/P7/8/2PPPPPP/RNBQKBNR w KQk - 1 6'
-        self.board_backend = chess.Board(fen)
-        self.update_board(fen)
+        # Hardcoded starting board states because loading random position is not implemented
+        self.board_states.append(BoardState('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1', 'e2e4', 'e4'))
+        self.board_states.append(BoardState('rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2', 'e7e5', 'e5'))
+        self.board_backend = chess.Board()
+        self.load_board_state()
 
     def mousePressEvent(self, event):
+        if self.input_disabled: return
+
         if event.button() == Qt.MouseButton.LeftButton:
 
             if self.button_queen.isVisible():
@@ -181,31 +188,51 @@ class Board(QWidget):
 
         if self.board_backend.is_legal(move):
             self.board_backend.push(move)
-            self.update_board(self.board_backend.fen())
 
-            # Draw arrow
-            origin = self.square_center(move_uci[:2])
-            destination = self.square_center(move_uci[2:])
-            self.board.draw_arrow(origin, destination)
-
-            sound = 'place.wav'
-            if '+' in move_algebraic or '#' in move_algebraic:
-                sound = 'check.wav'
-            elif 'x' in move_algebraic:
-                sound = 'capture.wav'
-            elif '-' in move_algebraic:
-                sound = 'castling.wav'
-
-            pygame.mixer.music.stop()
-            sound_path = os.path.join(self.directory, 'sounds', sound)
-            pygame.mixer.music.load(sound_path)
-            pygame.mixer.music.play()
-
-            self.selected_square = None
-            self.move_uci = None
+            if len(self.board_states) > self.board_state_index + 1:
+                if self.board_backend.fen() == self.board_states[self.board_state_index + 1].get_fen():
+                    self.board_state_index += 1
+                else:
+                    self.board_states = self.board_states[:self.board_state_index + 1]
+                    self.board_states.append(BoardState(self.board_backend.fen(), move_uci, move_algebraic))
+                    self.board_state_index += 1
+            else:
+                self.board_states.append(BoardState(self.board_backend.fen(), move_uci, move_algebraic))
+                self.board_state_index += 1
+            
+            self.set_input_disabled(False)
+            self.load_board_state()
             return True
         else:
             return False
+
+    def load_board_state(self):
+        fen = self.board_states[self.board_state_index].get_fen()
+        move_uci = self.board_states[self.board_state_index].get_move_uci()
+        move_algebraic = self.board_states[self.board_state_index].get_move_algebraic()
+
+        self.board_backend.set_fen(fen)
+        self.update_board(fen)
+
+        origin = self.square_center(move_uci[:2])
+        destination = self.square_center(move_uci[2:])
+        self.board.draw_arrow(origin, destination)
+
+        sound = 'place.wav'
+        if '+' in move_algebraic or '#' in move_algebraic:
+            sound = 'check.wav'
+        elif 'x' in move_algebraic:
+            sound = 'capture.wav'
+        elif '-' in move_algebraic:
+            sound = 'castling.wav'
+
+        pygame.mixer.music.stop()
+        sound_path = os.path.join(self.directory, 'sounds', sound)
+        pygame.mixer.music.load(sound_path)
+        pygame.mixer.music.play()
+
+        self.selected_square = None
+        self.move_uci = None
 
     def can_promote(self, move_uci: str):
         move = chess.Move.from_uci(move_uci + 'q')
@@ -322,7 +349,19 @@ class Board(QWidget):
                             break
 
     def keyPressEvent(self, event):
+        if self.button_queen.isVisible(): return
+
         if event.key() == Qt.Key.Key_Left:
-            print('Left')
+            if self.board_state_index >= 1:
+                self.board_state_index -= 1
+                self.load_board_state()
+                if self.board_state_index == 0:
+                    self.set_input_disabled(True)
         elif event.key() == Qt.Key.Key_Right:
-            print('Right')
+            if self.board_state_index <= len(self.board_states) - 2:
+                self.board_state_index += 1
+                self.load_board_state()
+                self.set_input_disabled(False)
+
+    def set_input_disabled(self, disabled: bool):
+        self.input_disabled = disabled
