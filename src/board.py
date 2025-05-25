@@ -5,7 +5,7 @@ import contextlib
 with contextlib.redirect_stdout(None):
     import pygame
 from PyQt6.QtCore import Qt, QPoint
-from PyQt6.QtGui import QCursor
+from PyQt6.QtGui import QCursor, QFont
 from PyQt6.QtWidgets import QWidget, QPushButton
 from piece import Piece
 from board_image import BoardImage
@@ -24,23 +24,33 @@ class Board(QWidget):
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         self.button_queen = QPushButton('Queen', self)
+        self.button_queen.setFixedSize(75, 24)
         self.button_queen.setVisible(False)
         self.button_queen.pressed.connect(self.handle_button_queen)
+        self.button_queen.setFont(QFont('Arial', 9))
 
         self.button_rook = QPushButton('Rook', self)
+        self.button_rook.setFixedSize(75, 24)
         self.button_rook.setVisible(False)
         self.button_rook.pressed.connect(self.handle_button_rook)
+        self.button_rook.setFont(QFont('Arial', 9))
 
         self.button_bishop = QPushButton('Bishop', self)
+        self.button_bishop.setFixedSize(75, 24)
         self.button_bishop.setVisible(False)
         self.button_bishop.pressed.connect(self.handle_button_bishop)
+        self.button_bishop.setFont(QFont('Arial', 9))
 
         self.button_knight = QPushButton('Knight', self)
+        self.button_knight.setFixedSize(75, 24)
         self.button_knight.setVisible(False)
         self.button_knight.pressed.connect(self.handle_button_knight)
+        self.button_knight.setFont(QFont('Arial', 9))
 
         self.setMouseTracking(True)
         self.board.setMouseTracking(True)
+
+        self.setStyleSheet('QPushButton {background-color: #28292E; border: 1px solid #484C54;} QPushButton:hover {background-color: #35363D;}')
 
         self.directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -87,7 +97,7 @@ class Board(QWidget):
             self.pieces.append(Piece(PieceType.PAWN_WHITE, self.board))
             self.pieces.append(Piece(PieceType.PAWN_BLACK, self.board))
 
-        fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+        fen = '1nbqkbnr/P1pppppp/1r6/1p6/P7/8/2PPPPPP/RNBQKBNR w KQk - 1 6'
         self.board_backend = chess.Board(fen)
         self.update_board(fen)
 
@@ -214,12 +224,23 @@ class Board(QWidget):
 
         global_cursor_position = QCursor.pos()
         local_cursor_position = self.mapFromGlobal(global_cursor_position)
-        self.button_queen.move(local_cursor_position)
-        self.button_rook.move(self.button_queen.pos().x(), self.button_queen.pos().y() + self.button_queen.height())
-        self.button_bishop.move(self.button_rook.pos().x(), self.button_rook.pos().y() + self.button_rook.height())
-        self.button_knight.move(self.button_bishop.pos().x(), self.button_bishop.pos().y() + self.button_bishop.height())
 
-        # TODO: clamp the button's positions so they don't leave the widget (right and bottom side)
+        promotion_prompt_bottom_right = QPoint()
+        promotion_prompt_height = self.button_queen.height() * 4 - 3
+        promotion_prompt_bottom_right.setX(local_cursor_position.x() + self.button_queen.width())
+        promotion_prompt_bottom_right.setY(local_cursor_position.y() + promotion_prompt_height)
+
+        promotion_prompt_position = QPoint(local_cursor_position)
+
+        if promotion_prompt_bottom_right.x() >= self.board.width():
+            promotion_prompt_position.setX(local_cursor_position.x() - (self.button_queen.width() - 1))
+        if promotion_prompt_bottom_right.y() >= self.board.height():
+            promotion_prompt_position.setY(local_cursor_position.y() - (promotion_prompt_height - 1))
+
+        self.button_queen.move(promotion_prompt_position)
+        self.button_rook.move(self.button_queen.pos().x(), self.button_queen.pos().y() + self.button_queen.height() - 1)
+        self.button_bishop.move(self.button_rook.pos().x(), self.button_rook.pos().y() + self.button_rook.height() - 1)
+        self.button_knight.move(self.button_bishop.pos().x(), self.button_bishop.pos().y() + self.button_bishop.height() - 1)
 
     def hide_promotion_prompt(self):
         self.button_queen.setVisible(False)
