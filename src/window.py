@@ -15,6 +15,8 @@ class Window(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setStyleSheet('color: #FFF;')
 
+        self.position = []
+
         font = QFont('Arial', 12, QFont.Weight.Bold)
 
         self.background = QWidget(self)
@@ -117,6 +119,7 @@ class Window(QWidget):
         self.button_reset.setCursor(Qt.CursorShape.PointingHandCursor)
         self.button_reset.setFont(QFont('Arial', 11, QFont.Weight.Bold))
         self.button_reset.setDisabled(True)
+        self.button_reset.clicked.connect(self.reset_position)
         self.button_reset.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.button_start_next = QPushButton('Start', self)
@@ -151,13 +154,21 @@ class Window(QWidget):
         self.old_position = None
 
     def load_position(self):
+        self.board.stop_engines()
+
         position_fen, previous_move_uci, previous_move_algebraic, next_move_uci = self.position_loader.get_position()
+        self.position = [position_fen, previous_move_uci, previous_move_algebraic, next_move_uci]
+
         self.board.load_position(position_fen, previous_move_uci, previous_move_algebraic, next_move_uci)
         self.button_start_next.setEnabled(False)
+        
         if self.button_start_next.text() == 'Start':
             self.button_start_next.setText('Next')
+            self.button_reset.setEnabled(True)
+
         for label in self.engine_move_labels:
             label.setText('')
+        
         self.engine_evaluation.setText('')
         self.label_result.setText('')
 
@@ -179,3 +190,14 @@ class Window(QWidget):
     def closeEvent(self, event):
         self.board.stop_engines()
         event.accept()
+
+    def reset_position(self):
+        self.board.stop_engines()
+        self.board.load_position(self.position[0], self.position[1], self.position[2], self.position[3])
+        self.button_start_next.setEnabled(False)
+
+        for label in self.engine_move_labels:
+            label.setText('')
+        
+        self.engine_evaluation.setText('')
+        self.label_result.setText('')

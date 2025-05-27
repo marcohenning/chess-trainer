@@ -254,6 +254,7 @@ class Board(QWidget):
         if self.attempt:
             if self.live_engine:
                 self.live_engine.stop()
+                self.live_engine.analysis_updated.disconnect(self.handle_live_engine_updated)
             self.live_engine = Engine(fen)
             self.live_engine.analysis_updated.connect(self.handle_live_engine_updated)
             self.live_engine.start()
@@ -414,6 +415,7 @@ class Board(QWidget):
         self.move_uci = None
         self.selected_square = None
         self.attempt = False
+        self.initial_evaluation = None
 
         self.load_board_state()
 
