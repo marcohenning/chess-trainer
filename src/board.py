@@ -4,7 +4,7 @@ import chess
 import contextlib
 with contextlib.redirect_stdout(None):
     import pygame
-from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtCore import Qt, QPoint, pyqtSignal
 from PyQt6.QtGui import QCursor, QFont
 from PyQt6.QtWidgets import QWidget, QPushButton
 from piece import Piece
@@ -14,6 +14,9 @@ from piece_type import PieceType
 
 
 class Board(QWidget):
+
+    attempt_made = pyqtSignal()
+
     def __init__(self, parent=None):
         super(Board, self).__init__(parent)
 
@@ -64,7 +67,8 @@ class Board(QWidget):
         self.turn = 'White'
         self.move_uci = None
         self.selected_square = None
-        self.input_disabled = False
+        self.input_disabled = True
+        self.attempt = False
 
         self.letter_to_piece_type = {
             "K": PieceType.KING_WHITE,
@@ -100,11 +104,8 @@ class Board(QWidget):
             self.pieces.append(Piece(PieceType.PAWN_WHITE, self.board))
             self.pieces.append(Piece(PieceType.PAWN_BLACK, self.board))
 
-        # Hardcoded starting board states because loading random position is not implemented
-        self.board_states.append(BoardState('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1', 'e2e4', 'e4'))
-        self.board_states.append(BoardState('rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2', 'e7e5', 'e5'))
         self.board_backend = chess.Board()
-        self.load_board_state()
+        self.update_board(self.board_backend.fen())
 
     def mousePressEvent(self, event):
         if self.input_disabled: return
@@ -188,6 +189,10 @@ class Board(QWidget):
 
         if self.board_backend.is_legal(move):
             self.board_backend.push(move)
+
+            if not self.attempt:
+                self.attempt = True
+                self.attempt_made.emit()
 
             if len(self.board_states) > self.board_state_index + 1:
                 if self.board_backend.fen() == self.board_states[self.board_state_index + 1].get_fen():
@@ -365,3 +370,30 @@ class Board(QWidget):
 
     def set_input_disabled(self, disabled: bool):
         self.input_disabled = disabled
+
+    def load_position(self, position_fen, previous_move_uci, previous_move_algebraic, next_move_uci):
+        self.board_states.clear()
+        self.board_state_index = 1
+
+        self.board_states.append(BoardState(position_fen, previous_move_uci, previous_move_algebraic))
+
+        self.board_backend.set_fen(position_fen)
+        next_move = chess.Move.from_uci(next_move_uci)
+        next_move_algebraic = self.board_backend.san(next_move)
+        self.board_backend.push(next_move)
+
+        self.board_states.append(BoardState(self.board_backend.fen(), next_move_uci, next_move_algebraic))
+
+        if self.board_backend.fen().split(' ')[1] == 'w':
+            self.turn = 'White'
+        else:
+            self.turn = 'Black'
+
+        self.hide_promotion_prompt()
+        self.set_input_disabled(False)
+
+        self.move_uci = None
+        self.selected_square = None
+        self.attempt = False
+
+        self.load_board_state()

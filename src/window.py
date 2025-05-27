@@ -2,6 +2,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QWidget, QPushButton, QLabel
 from PyQt6.QtGui import QFont
 from board import Board
+from position_loader import PositionLoader
 
 
 class Window(QWidget):
@@ -46,6 +47,8 @@ class Window(QWidget):
 
         self.board = Board(self)
         self.board.move(30, 70)
+
+        self.position_loader = PositionLoader()
 
         self.label_result = QLabel(self)
         self.label_result.setFixedSize(150, 70)
@@ -104,12 +107,15 @@ class Window(QWidget):
         self.button_reset.setFont(QFont('Arial', 11, QFont.Weight.Bold))
         self.button_reset.setDisabled(True)
 
-        self.button_next = QPushButton('Start', self)
-        self.button_next.setFixedSize(150, 50)
-        self.button_next.move(700, 660)
-        self.button_next.setStyleSheet('QPushButton {background-color: #28292E; border-radius: 10px;} QPushButton:hover {background-color: #2C2D33;} QPushButton:disabled {background-color: #2C2D33;}')
-        self.button_next.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.button_next.setFont(QFont('Arial', 11, QFont.Weight.Bold))
+        self.button_start_next = QPushButton('Start', self)
+        self.button_start_next.setFixedSize(150, 50)
+        self.button_start_next.move(700, 660)
+        self.button_start_next.setStyleSheet('QPushButton {background-color: #28292E; border-radius: 10px;} QPushButton:hover {background-color: #2C2D33;} QPushButton:disabled {background-color: #2C2D33;}')
+        self.button_start_next.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.button_start_next.setFont(QFont('Arial', 11, QFont.Weight.Bold))
+        self.button_start_next.clicked.connect(self.load_position)
+
+        self.board.attempt_made.connect(self.enable_button_start_next)
 
         self.drag_allowed = False
 
@@ -130,3 +136,13 @@ class Window(QWidget):
     def mouseReleaseEvent(self, event):
         self.drag_allowed = False
         self.old_position = None
+
+    def load_position(self):
+        position_fen, previous_move_uci, previous_move_algebraic, next_move_uci = self.position_loader.get_position()
+        self.board.load_position(position_fen, previous_move_uci, previous_move_algebraic, next_move_uci)
+        self.button_start_next.setEnabled(False)
+        if self.button_start_next.text() == 'Start':
+            self.button_start_next.setText('Next')
+
+    def enable_button_start_next(self):
+        self.button_start_next.setEnabled(True)
