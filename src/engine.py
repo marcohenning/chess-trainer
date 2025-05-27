@@ -13,18 +13,19 @@ class Engine(QThread):
     def __init__(self, fen: str):
         super().__init__()
 
-        self.board = chess.Board(fen)
-        self.move_amount = min(5, self.board.legal_moves.count())
+        self.fen = fen
+        self.running = True
 
         self.directory = os.path.dirname(os.path.abspath(__file__))
-        """file_name = ''
-        engine_path = os.path.join(self.directory, 'stockfish', file_name)"""
-        engine_path = 'C:/Users/MH/Desktop/stockfish/stockfish-windows-x86-64-avx2.exe' #temp
-        self.engine = chess.engine.SimpleEngine.popen_uci(engine_path)
-        self.running = True
+        file_name = 'stockfish-windows-x86-64-avx2.exe'
+        self.engine_path = os.path.join(self.directory, 'stockfish', file_name)
 
     def run(self):
         try:
+            self.board = chess.Board(self.fen)
+            self.move_amount = min(5, self.board.legal_moves.count())
+            self.engine = chess.engine.SimpleEngine.popen_uci(self.engine_path)
+
             start_time = time.time()
             with self.engine.analysis(self.board, multipv=self.move_amount) as analysis:
                 seen = {}
