@@ -47,6 +47,8 @@ class Window(QWidget):
 
         self.board = Board(self)
         self.board.move(30, 70)
+        self.board.live_engine_updated.connect(self.update_live_engine_labels)
+        self.board.loss_engine_updated.connect(self.update_loss_label)
 
         self.position_loader = PositionLoader()
 
@@ -99,6 +101,13 @@ class Window(QWidget):
         self.engine_move_5.setFont(QFont('Arial', 11, QFont.Weight.Bold))
         self.engine_move_5.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        self.engine_move_labels = []
+        self.engine_move_labels.append(self.engine_move_1)
+        self.engine_move_labels.append(self.engine_move_2)
+        self.engine_move_labels.append(self.engine_move_3)
+        self.engine_move_labels.append(self.engine_move_4)
+        self.engine_move_labels.append(self.engine_move_5)
+
         self.button_reset = QPushButton('Reset', self)
         self.button_reset.setFixedSize(150, 50)
         self.button_reset.move(700, 605)
@@ -143,6 +152,22 @@ class Window(QWidget):
         self.button_start_next.setEnabled(False)
         if self.button_start_next.text() == 'Start':
             self.button_start_next.setText('Next')
+        for label in self.engine_move_labels:
+            label.setText('')
+        self.engine_evaluation.setText('')
+        self.label_result.setText('')
 
     def enable_button_start_next(self):
         self.button_start_next.setEnabled(True)
+
+    def update_live_engine_labels(self, evaluation, moves):
+        self.engine_evaluation.setText(evaluation)
+
+        for label in self.engine_move_labels:
+            label.setText('')
+
+        for i in range(len(moves)):
+            self.engine_move_labels[i].setText('{} ({})'.format(moves[i][0], moves[i][1]))
+
+    def update_loss_label(self, loss):
+        self.label_result.setText(loss)

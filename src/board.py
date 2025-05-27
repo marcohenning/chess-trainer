@@ -11,11 +11,14 @@ from piece import Piece
 from board_image import BoardImage
 from board_state import BoardState
 from piece_type import PieceType
+from engine import Engine
 
 
 class Board(QWidget):
 
     attempt_made = pyqtSignal()
+    live_engine_updated = pyqtSignal(str, list)
+    loss_engine_updated = pyqtSignal(str)
 
     def __init__(self, parent=None):
         super(Board, self).__init__(parent)
@@ -69,6 +72,8 @@ class Board(QWidget):
         self.selected_square = None
         self.input_disabled = True
         self.attempt = False
+        self.initial_evaluation = None
+        self.live_engine = None
 
         self.letter_to_piece_type = {
             "K": PieceType.KING_WHITE,
@@ -192,6 +197,11 @@ class Board(QWidget):
 
             if not self.attempt:
                 self.attempt = True
+
+                self.loss_engine = Engine(self.board_backend.fen())
+                self.loss_engine.analysis_updated.connect(self.handle_loss_engine_updated)
+                self.loss_engine.start()
+
                 self.attempt_made.emit()
 
             if len(self.board_states) > self.board_state_index + 1:
@@ -238,6 +248,13 @@ class Board(QWidget):
 
         self.selected_square = None
         self.move_uci = None
+
+        if self.attempt:
+            if self.live_engine:
+                self.live_engine.stop()
+            self.live_engine = Engine(fen)
+            self.live_engine.analysis_updated.connect(self.handle_live_engine_updated)
+            self.live_engine.start()
 
     def can_promote(self, move_uci: str):
         move = chess.Move.from_uci(move_uci + 'q')
@@ -397,3 +414,22 @@ class Board(QWidget):
         self.attempt = False
 
         self.load_board_state()
+
+        self.set_input_disabled(True)
+        self.initial_engine = Engine(self.board_backend.fen())
+        self.initial_engine.analysis_updated.connect(self.handle_initial_engine_updated)
+        self.initial_engine.analysis_finished.connect(self.handle_initial_engine_finished)
+        self.initial_engine.start()
+
+    def handle_live_engine_updated(self, evaluation, moves):
+        self.live_engine_updated.emit(evaluation, moves)
+
+    def handle_initial_engine_updated(self, evaluation, moves):
+        self.initial_evaluation = evaluation
+
+    def handle_initial_engine_finished(self):
+        self.set_input_disabled(False)
+
+    def handle_loss_engine_updated(self, evaluation, moves):
+        loss = str(abs(float(self.initial_evaluation) - float(evaluation)))
+        self.loss_engine_updated.emit(loss)
