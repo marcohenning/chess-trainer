@@ -10,10 +10,15 @@ class Window(QWidget):
         super().__init__(parent=None)
 
         self.setFixedSize(880, 740)
-        self.move(450, 50)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setStyleSheet('color: #FFF;')
+
+        screen = self.screen().availableGeometry()
+        size = self.geometry()
+        x = screen.center().x() - size.width() // 2
+        y = screen.center().y() - size.height() // 2
+        self.move(x + 1, y + 1)
 
         self.position = []
 
