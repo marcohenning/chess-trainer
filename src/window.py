@@ -37,6 +37,7 @@ class Window(QWidget):
         self.button_close.clicked.connect(self.close)
         self.button_close.setStyleSheet('background-color: #FF5953; border-radius: 7px;')
         self.button_close.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.button_close.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.button_minimize = QPushButton(self)
         self.button_minimize.setFixedSize(14, 14)
@@ -44,6 +45,7 @@ class Window(QWidget):
         self.button_minimize.clicked.connect(self.showMinimized)
         self.button_minimize.setStyleSheet('background-color: #EBC631; border-radius: 7px;')
         self.button_minimize.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.button_minimize.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.board = Board(self)
         self.board.move(30, 70)
@@ -115,6 +117,7 @@ class Window(QWidget):
         self.button_reset.setCursor(Qt.CursorShape.PointingHandCursor)
         self.button_reset.setFont(QFont('Arial', 11, QFont.Weight.Bold))
         self.button_reset.setDisabled(True)
+        self.button_reset.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.button_start_next = QPushButton('Start', self)
         self.button_start_next.setFixedSize(150, 50)
@@ -123,6 +126,7 @@ class Window(QWidget):
         self.button_start_next.setCursor(Qt.CursorShape.PointingHandCursor)
         self.button_start_next.setFont(QFont('Arial', 11, QFont.Weight.Bold))
         self.button_start_next.clicked.connect(self.load_position)
+        self.button_start_next.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.board.attempt_made.connect(self.enable_button_start_next)
 
@@ -171,3 +175,7 @@ class Window(QWidget):
 
     def update_loss_label(self, loss):
         self.label_result.setText(loss)
+
+    def closeEvent(self, event):
+        self.board.stop_engines()
+        event.accept()

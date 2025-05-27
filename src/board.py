@@ -74,6 +74,8 @@ class Board(QWidget):
         self.attempt = False
         self.initial_evaluation = None
         self.live_engine = None
+        self.initial_engine = None
+        self.loss_engine = None
 
         self.letter_to_piece_type = {
             "K": PieceType.KING_WHITE,
@@ -433,3 +435,19 @@ class Board(QWidget):
     def handle_loss_engine_updated(self, evaluation, moves):
         loss = str(abs(float(self.initial_evaluation) - float(evaluation)))
         self.loss_engine_updated.emit(loss)
+
+    def stop_engines(self):
+        if self.initial_engine:
+            self.initial_engine.stop()
+            self.initial_engine.quit()
+            self.initial_engine.wait()
+        
+        if self.loss_engine:
+            self.loss_engine.stop()
+            self.loss_engine.quit()
+            self.loss_engine.wait()
+
+        if self.live_engine:
+            self.live_engine.stop()
+            self.live_engine.quit()
+            self.live_engine.wait()
