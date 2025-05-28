@@ -19,6 +19,7 @@ class Board(QWidget):
     attempt_made = pyqtSignal()
     live_engine_updated = pyqtSignal(str, list)
     loss_engine_updated = pyqtSignal(str)
+    game_over = pyqtSignal(str)
 
     def __init__(self, parent=None):
         super(Board, self).__init__(parent)
@@ -258,6 +259,17 @@ class Board(QWidget):
             self.live_engine = Engine(fen)
             self.live_engine.analysis_updated.connect(self.handle_live_engine_updated)
             self.live_engine.start()
+
+            if self.board_backend.is_checkmate():
+                loser = self.board_backend.turn
+                if loser == chess.WHITE:
+                    message = '0 - 1'
+                else:
+                    message = '1 - 0'
+                self.game_over.emit(message)
+                
+            elif self.board_backend.is_stalemate() or self.board_backend.is_insufficient_material() or self.board_backend.halfmove_clock >= 100:
+                self.game_over.emit('1/2 - 1/2')
 
     def can_promote(self, move_uci: str):
         move = chess.Move.from_uci(move_uci + 'q')

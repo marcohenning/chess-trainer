@@ -137,6 +137,7 @@ class Window(QWidget):
         self.button_start_next.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.board.attempt_made.connect(self.enable_button_start_next)
+        self.board.game_over.connect(self.handle_game_over)
 
         self.drag_allowed = False
 
@@ -206,3 +207,8 @@ class Window(QWidget):
         
         self.engine_evaluation.setText('')
         self.label_result.setText('')
+
+    def handle_game_over(self, message):
+        self.engine_evaluation.setText(message)
+        for label in self.engine_move_labels:
+            label.setText('')

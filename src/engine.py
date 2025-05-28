@@ -25,13 +25,16 @@ class Engine(QThread):
             self.board = chess.Board(self.fen)
             self.move_amount = min(5, self.board.legal_moves.count())
             self.engine = chess.engine.SimpleEngine.popen_uci(self.engine_path)
+            game_over = False
+            if self.board.is_checkmate() or self.board.is_stalemate() or self.board.is_insufficient_material() or self.board.halfmove_clock >= 100:
+                game_over = True
 
             start_time = time.time()
             with self.engine.analysis(self.board, multipv=self.move_amount) as analysis:
                 seen = {}
 
                 for information in analysis:
-                    if not self.running or time.time() - start_time > 5.0:
+                    if not self.running or time.time() - start_time > 5.0 or game_over:
                         self.analysis_finished.emit()
                         break
                     if 'score' in information and 'pv' in information:
