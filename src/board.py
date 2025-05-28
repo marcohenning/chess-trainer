@@ -274,7 +274,7 @@ class Board(QWidget):
                     message = '1 - 0'
                 self.game_over.emit(message)
                 
-            elif self.board_backend.is_stalemate() or self.board_backend.is_insufficient_material() or self.board_backend.halfmove_clock >= 100:
+            elif self.board_backend.is_stalemate() or self.board_backend.is_insufficient_material():
                 self.game_over.emit('1/2 - 1/2')
 
     def can_promote(self, move_uci: str):

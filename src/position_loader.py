@@ -1,9 +1,11 @@
 import os
 import random
+import chess
 
 
 class PositionLoader():
     def __init__(self):
+        self.board = chess.Board()
         self.directory = os.path.dirname(os.path.abspath(__file__))
 
     def get_position(self):
@@ -20,5 +22,18 @@ class PositionLoader():
             previous_move_uci = position_elements[1]
             previous_move_algebraic = position_elements[2]
             next_move_uci = position_elements[3]
+
+            return position_fen, previous_move_uci, previous_move_algebraic, next_move_uci
+
+    def get_random_position(self):
+        while True:
+            position_fen, previous_move_uci, previous_move_algebraic, next_move_uci = self.get_position()
+            
+            self.board.set_fen(position_fen)
+            move = chess.Move.from_uci(next_move_uci)
+            self.board.push(move)
+
+            if self.board.is_checkmate() or self.board.is_stalemate() or self.board.is_insufficient_material():
+                continue
 
             return position_fen, previous_move_uci, previous_move_algebraic, next_move_uci

@@ -162,7 +162,7 @@ class Window(QWidget):
     def load_position(self):
         self.board.disconnect_engines()
 
-        position_fen, previous_move_uci, previous_move_algebraic, next_move_uci = self.position_loader.get_position()
+        position_fen, previous_move_uci, previous_move_algebraic, next_move_uci = self.position_loader.get_random_position()
         self.position = [position_fen, previous_move_uci, previous_move_algebraic, next_move_uci]
 
         self.board.load_position(position_fen, previous_move_uci, previous_move_algebraic, next_move_uci)

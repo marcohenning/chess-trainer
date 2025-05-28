@@ -26,7 +26,7 @@ class Engine(QThread):
             self.move_amount = min(5, self.board.legal_moves.count())
             self.engine = chess.engine.SimpleEngine.popen_uci(self.engine_path)
             game_over = False
-            if self.board.is_checkmate() or self.board.is_stalemate() or self.board.is_insufficient_material() or self.board.halfmove_clock >= 100:
+            if self.board.is_checkmate() or self.board.is_stalemate() or self.board.is_insufficient_material():
                 game_over = True
 
             start_time = time.time()
@@ -50,6 +50,8 @@ class Engine(QThread):
                             else:
                                 score = evaluation.score()
                                 sign = '+' if score > 0 else '-'
+                                if score == 0:
+                                    sign = ''
                                 evaluation_string = '{}{:.2f}'.format(sign, abs(score) / 100.0)
                             
                             seen[multipv] = (move, evaluation_string)
