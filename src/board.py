@@ -255,7 +255,10 @@ class Board(QWidget):
         if self.attempt:
             if self.live_engine:
                 self.live_engine.stop()
-                self.live_engine.analysis_updated.disconnect(self.handle_live_engine_updated)
+                try:
+                    self.live_engine.analysis_updated.disconnect(self.handle_live_engine_updated)
+                except:
+                    pass
             self.live_engine = Engine(fen)
             self.live_engine.analysis_updated.connect(self.handle_live_engine_updated)
             self.live_engine.start()
@@ -472,5 +475,9 @@ class Board(QWidget):
 
         if self.live_engine:
             self.live_engine.stop()
+            try:
+                self.live_engine.analysis_updated.disconnect(self.handle_live_engine_updated)
+            except:
+                pass
             self.live_engine.quit()
             self.live_engine.wait()
