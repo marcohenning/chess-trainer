@@ -54,6 +54,10 @@ class Engine(QThread):
                             
                             seen[multipv] = (move, evaluation_string)
 
+                        if time.time() - start_time > 5.0:
+                            self.analysis_finished.emit()
+                            break
+
                         if len(seen) == self.move_amount:
                             moves = []
                             for i in range(self.move_amount):
