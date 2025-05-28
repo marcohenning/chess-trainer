@@ -456,19 +456,49 @@ class Board(QWidget):
         self.set_input_disabled(False)
 
     def handle_loss_engine_updated(self, evaluation, moves):
+        loss = 'N/A'
+
+        favorable_sign = '+'
+        if self.turn == 'Black':
+            favorable_sign = '-'
+
+        mate_number_initial = ''
         if 'M' in self.initial_evaluation:
-            if self.initial_evaluation == evaluation:
-                loss = '0.00'
-            else:
-                loss = self.initial_evaluation
-        elif 'M' in evaluation:
-            loss = '0.00'
-        else:
+            mate_number_initial = int(self.initial_evaluation[2:])
+        mate_number_now = ''
+        if 'M' in evaluation:
+            mate_number_now = int(evaluation[2:])
+
+        if not 'M' in self.initial_evaluation and not 'M' in evaluation:
             if self.initial_evaluation_move == self.attempt_move:
                 loss = '0.00'
             else:
                 loss = '{:.2f}'.format(abs(float(self.initial_evaluation) - float(evaluation)))
-            
+
+        elif not 'M' in self.initial_evaluation and 'M' in evaluation:
+            if evaluation[0] == favorable_sign:
+                loss = '0.00'
+            else:
+                loss = '#'
+
+        elif 'M' in self.initial_evaluation and self.initial_evaluation[0] == favorable_sign:
+            if not 'M' in evaluation:
+                loss = self.initial_evaluation
+            elif 'M' in evaluation and evaluation[0] != favorable_sign:
+                loss = '#'
+            elif mate_number_now >= mate_number_initial:
+                loss = self.initial_evaluation
+            elif mate_number_now < mate_number_initial:
+                loss = '0.00'
+
+        elif 'M' in self.initial_evaluation and self.initial_evaluation[0] != favorable_sign:
+            if not 'M' in evaluation or ('M' in evaluation and evaluation[0] == favorable_sign) or mate_number_now >= mate_number_initial:
+                loss = '0.00'
+            elif mate_number_now == mate_number_initial:
+                loss = '0.00'
+            elif mate_number_now < mate_number_initial:
+                loss = self.initial_evaluation
+        
         self.loss_engine_updated.emit(loss)
 
     def stop_engines(self):
