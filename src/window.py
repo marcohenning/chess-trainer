@@ -181,7 +181,7 @@ class Window(QWidget):
         self.button_start_next.setEnabled(True)
 
     def update_live_engine_labels(self, evaluation, moves):
-        self.engine_evaluation.setText(evaluation)
+        self.engine_evaluation.setText('Eval: {}'.format(evaluation))
 
         for label in self.engine_move_labels:
             label.setText('')
@@ -190,7 +190,7 @@ class Window(QWidget):
             self.engine_move_labels[i].setText('{} ({})'.format(moves[i][0], moves[i][1]))
 
     def update_loss_label(self, loss):
-        self.label_result.setText(loss)
+        self.label_result.setText('Loss: {}'.format(loss))
 
     def closeEvent(self, event):
         self.board.stop_engines()

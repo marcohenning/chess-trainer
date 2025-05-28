@@ -435,7 +435,16 @@ class Board(QWidget):
         self.set_input_disabled(False)
 
     def handle_loss_engine_updated(self, evaluation, moves):
-        loss = str(abs(float(self.initial_evaluation) - float(evaluation)))
+        if 'M' in self.initial_evaluation:
+            if self.initial_evaluation == evaluation:
+                loss = '0.00'
+            else:
+                loss = self.initial_evaluation
+        elif 'M' in evaluation:
+            loss = '0.00'
+        else:
+            loss = '{:.2f}'.format(abs(float(self.initial_evaluation) - float(evaluation)))
+            
         self.loss_engine_updated.emit(loss)
 
     def stop_engines(self):

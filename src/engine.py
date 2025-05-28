@@ -40,11 +40,14 @@ class Engine(QThread):
                             move = self.board.san(information['pv'][0])
                             evaluation = information['score'].white()
 
-                            # TODO: Format eval strings correctly
                             if evaluation.is_mate():
-                                evaluation_string = 'M{}'.format(evaluation.mate())
+                                mate = evaluation.mate()
+                                sign = '+' if mate > 0 else '-'
+                                evaluation_string = '{}M{}'.format(sign, abs(mate))
                             else:
-                                evaluation_string = '{}'.format(evaluation.score() / 100.0)
+                                score = evaluation.score()
+                                sign = '+' if score > 0 else '-'
+                                evaluation_string = '{}{:.2f}'.format(sign, abs(score) / 100.0)
                             
                             seen[multipv] = (move, evaluation_string)
 
