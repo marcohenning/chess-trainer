@@ -160,7 +160,7 @@ class Window(QWidget):
         self.old_position = None
 
     def load_position(self):
-        self.board.stop_engines()
+        self.board.disconnect_engines()
 
         position_fen, previous_move_uci, previous_move_algebraic, next_move_uci = self.position_loader.get_position()
         self.position = [position_fen, previous_move_uci, previous_move_algebraic, next_move_uci]
@@ -198,7 +198,7 @@ class Window(QWidget):
         event.accept()
 
     def reset_position(self):
-        self.board.stop_engines()
+        self.board.disconnect_engines()
         self.board.load_position(self.position[0], self.position[1], self.position[2], self.position[3])
         self.button_start_next.setEnabled(False)
 

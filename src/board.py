@@ -73,7 +73,9 @@ class Board(QWidget):
         self.selected_square = None
         self.input_disabled = True
         self.attempt = False
+        self.attempt_move = None
         self.initial_evaluation = None
+        self.initial_evaluation_move = None
         self.live_engine = None
         self.initial_engine = None
         self.loss_engine = None
@@ -200,6 +202,7 @@ class Board(QWidget):
 
             if not self.attempt:
                 self.attempt = True
+                self.attempt_move = move_algebraic
 
                 self.loss_engine = Engine(self.board_backend.fen())
                 self.loss_engine.analysis_updated.connect(self.handle_loss_engine_updated)
@@ -430,7 +433,9 @@ class Board(QWidget):
         self.move_uci = None
         self.selected_square = None
         self.attempt = False
+        self.attempt_move = None
         self.initial_evaluation = None
+        self.initial_evaluation_move = None
 
         self.load_board_state()
 
@@ -445,6 +450,7 @@ class Board(QWidget):
 
     def handle_initial_engine_updated(self, evaluation, moves):
         self.initial_evaluation = evaluation
+        self.initial_evaluation_move = moves[0][0]
 
     def handle_initial_engine_finished(self):
         self.set_input_disabled(False)
@@ -458,7 +464,10 @@ class Board(QWidget):
         elif 'M' in evaluation:
             loss = '0.00'
         else:
-            loss = '{:.2f}'.format(abs(float(self.initial_evaluation) - float(evaluation)))
+            if self.initial_evaluation_move == self.attempt_move:
+                loss = '0.00'
+            else:
+                loss = '{:.2f}'.format(abs(float(self.initial_evaluation) - float(evaluation)))
             
         self.loss_engine_updated.emit(loss)
 
@@ -475,9 +484,31 @@ class Board(QWidget):
 
         if self.live_engine:
             self.live_engine.stop()
+            self.live_engine.quit()
+            self.live_engine.wait()
+
+    def disconnect_engines(self):
+        if self.initial_engine:
+            self.initial_engine.stop()
+            try:
+                self.initial_engine.analysis_updated.disconnect(self.handle_initial_engine_updated)
+            except:
+                pass
+            try:
+                self.initial_engine.analysis_finished.disconnect(self.handle_initial_engine_finished)
+            except:
+                pass
+
+        if self.loss_engine:
+            self.loss_engine.stop()
+            try:
+                self.loss_engine.analysis_updated.disconnect(self.handle_loss_engine_updated)
+            except:
+                pass
+
+        if self.live_engine:
+            self.live_engine.stop()
             try:
                 self.live_engine.analysis_updated.disconnect(self.handle_live_engine_updated)
             except:
                 pass
-            self.live_engine.quit()
-            self.live_engine.wait()
