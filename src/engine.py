@@ -68,6 +68,7 @@ class Engine(QThread):
 
                             self.analysis_updated.emit(moves[0][1], moves)
                             seen.clear()
+                self.analysis_finished.emit()
 
         except Exception as exception:
             pass

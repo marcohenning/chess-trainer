@@ -272,9 +272,18 @@ class Board(QWidget):
                     message = '0 - 1'
                 else:
                     message = '1 - 0'
+                
+                favorable_sign = '+'
+                if self.turn == 'Black':
+                    favorable_sign = '-'
+                    
+                if len(self.board_states) == 3:
+                    self.handle_loss_engine_updated('{}M0'.format(favorable_sign), [])
                 self.game_over.emit(message)
                 
             elif self.board_backend.is_stalemate() or self.board_backend.is_insufficient_material():
+                if len(self.board_states) == 3:
+                    self.handle_loss_engine_updated('0.00', [])
                 self.game_over.emit('1/2 - 1/2')
 
     def can_promote(self, move_uci: str):
