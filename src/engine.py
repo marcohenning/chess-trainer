@@ -30,7 +30,7 @@ class Engine(QThread):
                 game_over = True
 
             start_time = time.time()
-            with self.engine.analysis(self.board, multipv=self.move_amount) as analysis:
+            with self.engine.analysis(self.board, chess.engine.Limit(time=5.0), multipv=self.move_amount) as analysis:
                 seen = {}
 
                 for information in analysis:
