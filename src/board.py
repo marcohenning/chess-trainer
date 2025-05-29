@@ -74,6 +74,7 @@ class Board(QWidget):
         self.input_disabled = True
         self.attempt = False
         self.attempt_move = None
+        self.attempt_fen = None
         self.initial_evaluation = None
         self.initial_evaluation_move = None
         self.live_engine = None
@@ -203,6 +204,7 @@ class Board(QWidget):
             if not self.attempt:
                 self.attempt = True
                 self.attempt_move = move_algebraic
+                self.attempt_fen = self.board_backend.fen()
 
                 self.loss_engine = Engine(self.board_backend.fen())
                 self.loss_engine.analysis_updated.connect(self.handle_loss_engine_updated)
@@ -277,12 +279,12 @@ class Board(QWidget):
                 if self.turn == 'Black':
                     favorable_sign = '-'
                     
-                if len(self.board_states) == 3:
+                if len(self.board_states) == 3 and self.board_backend.fen() == self.attempt_fen:
                     self.handle_loss_engine_updated('{}M0'.format(favorable_sign), [])
                 self.game_over.emit(message)
                 
             elif self.board_backend.is_stalemate() or self.board_backend.is_insufficient_material():
-                if len(self.board_states) == 3:
+                if len(self.board_states) == 3 and self.board_backend.fen() == self.attempt_fen:
                     self.handle_loss_engine_updated('0.00', [])
                 self.game_over.emit('1/2 - 1/2')
 
@@ -443,6 +445,7 @@ class Board(QWidget):
         self.selected_square = None
         self.attempt = False
         self.attempt_move = None
+        self.attempt_fen = None
         self.initial_evaluation = None
         self.initial_evaluation_move = None
 
