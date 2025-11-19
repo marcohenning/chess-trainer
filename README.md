@@ -6,7 +6,7 @@ An interactive tool to practice finding the best move in any given chess positio
 
 ## About
 
-This tool is an interactive chess trainer that lets you practice your chess understanding by loading random positions on an interactive chess board to solve. After you make your move, the software displays the loss (difference between the best engine move and your own move) and the engine evaluation of the position. It also features a live engine showing the 5 best moves for you to analyze each position in more detail. You can use the left-arrow and right-arrow keys to go back and forth between moves. To go to the next position, press the `Next` button. Positions can be reset to their original state by using the `Reset` button.
+This tool is an interactive chess trainer that lets you practice your chess understanding by loading random positions on a custom-built interactive chess board to solve. After you make your move, the software displays the loss (difference between the best engine move and your own move) and the engine evaluation of the position. It also features a live engine showing the 5 best moves for you to analyze each position in more detail. You can use the left-arrow and right-arrow keys to go back and forth between moves. To go to the next position, press the `Next` button. Positions can be reset to their original state by using the `Reset` button.
 
 ## Usage
 
