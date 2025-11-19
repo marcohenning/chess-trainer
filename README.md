@@ -2,7 +2,7 @@
 
 An interactive tool to practice finding the best move in any given chess position.
 
-GIF...
+![Showcase](https://github.com/user-attachments/assets/bc527863-3c5a-41eb-ac90-e2ef668358dd)
 
 ## About
 
