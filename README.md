@@ -26,7 +26,7 @@ The positions have all been taken from the lichess.org open database, which feat
 
 ## Showcase
 
-XXX
+https://github.com/user-attachments/assets/3cd2eecf-5e47-4c78-993c-af6cee78c761
 
 ## License
 
