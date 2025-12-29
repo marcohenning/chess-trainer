@@ -118,6 +118,8 @@ class Board(QWidget):
         self.board_backend = chess.Board()
         self.update_board(self.board_backend.fen())
 
+        self.engines = []
+
     def mousePressEvent(self, event):
         if self.input_disabled: return
 
@@ -207,6 +209,7 @@ class Board(QWidget):
                 self.attempt_fen = self.board_backend.fen()
 
                 self.loss_engine = Engine(self.board_backend.fen())
+                self.add_engine(self.loss_engine)
                 self.loss_engine.analysis_updated.connect(self.handle_loss_engine_updated)
                 self.loss_engine.start()
 
@@ -265,6 +268,7 @@ class Board(QWidget):
                 except:
                     pass
             self.live_engine = Engine(fen)
+            self.add_engine(self.live_engine)
             self.live_engine.analysis_updated.connect(self.handle_live_engine_updated)
             self.live_engine.start()
 
@@ -453,6 +457,7 @@ class Board(QWidget):
 
         self.set_input_disabled(True)
         self.initial_engine = Engine(self.board_backend.fen())
+        self.add_engine(self.initial_engine)
         self.initial_engine.analysis_updated.connect(self.handle_initial_engine_updated)
         self.initial_engine.analysis_finished.connect(self.handle_initial_engine_finished)
         self.initial_engine.start()
@@ -512,6 +517,11 @@ class Board(QWidget):
                 loss = self.initial_evaluation
         
         self.loss_engine_updated.emit(loss)
+
+    def add_engine(self, engine: Engine):
+        if len(self.engines) >= 1000:
+            self.engines.pop(0)
+        self.engines.append(engine)
 
     def stop_engines(self):
         if self.initial_engine:
